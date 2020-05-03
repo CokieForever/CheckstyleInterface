@@ -1,0 +1,10 @@
+/.idea
+.pytest_cache
+*.iml
+__pycache__
+/dist
+/*.egg-info
+/build
+/MANIFEST
+/checkstyleinterface/tests/res/checkstyle/checkstyle.properties
+/checkstyleinterface/tests/res/tmp
