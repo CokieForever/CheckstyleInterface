@@ -14,9 +14,15 @@ Primarily, this tool is intended to be used as a pre-commit or pre-push hook, to
 automatically and in a more user-friendly way that a simple log display. The user can then choose to ignore the errors
 and pursuing with the commit or to cancel the operation.
 
-## Usage
+## Installation
 
-First run: `python setup.py install`. This will install the tool and put it in your PATH.
+To install the tool, go to the root folder and run:
+
+`pip install .`
+
+This will install the tool and put it in your PATH.
+
+## Usage
 
 Then you can run: `checkinter -c <Checkstyle XML config> -f <file to check>` to check a single file. Use `-d` to check
 all files of a directory, and `-g` to check only the modified files of a local Git repository. Moreover, you will need
@@ -30,6 +36,10 @@ interface will be started and populated with the found errors. The interface can
 what the user can close the interface and decide to continue or to cancel. In the first case, the final return
 value will be 0, in the second case it will be 1. This return value can be used e.g. in pre-commit hooks, to cancel
 the commit according to the choice of the user.
+
+## Uninstallation
+
+Simply run `pip uninstall checkstyleinterface` to uninstall the tool.
 
 ## Development status
 

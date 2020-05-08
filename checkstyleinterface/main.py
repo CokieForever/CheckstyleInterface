@@ -21,7 +21,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 
-"""checkinter.py"""
+"""main.py"""
 
 __author__ = "Quoc-Nam Dessoulles"
 __email__ = "cokie.forever@gmail.com"

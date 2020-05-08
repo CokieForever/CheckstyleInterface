@@ -36,6 +36,11 @@ setup(
     author=__author__,
     author_email=__email__,
     packages=find_packages(exclude=["*.tests", "*.tests.*"]),
-    scripts=["checkstyleinterface/scripts/checkinter.py"],
+    install_requires=["psutil~=5.7.0"],
+    entry_points={
+        "console_scripts": [
+            "checkinter = checkstyleinterface.main:main"
+        ],
+    },
     python_requires='>=3.7'
 )

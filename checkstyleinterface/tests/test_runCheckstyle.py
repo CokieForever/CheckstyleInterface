@@ -35,7 +35,7 @@ import sys
 import time
 from unittest.mock import patch
 
-import checkinter
+from checkstyleinterface import main
 import pytest
 
 
@@ -99,9 +99,9 @@ class TestRunCheckstyle:
         lArgs += ["-c", sConfigFile, "-p", self.sPropFile]
         if sJarFile:
             lArgs += ["-j", sJarFile]
-        with patch.object(sys, "argv", ["checkinter.py"] + lArgs):
-            oArgs = checkinter.parseArgs()
-        return checkinter.runCheckstyle(oArgs)
+        with patch.object(sys, "argv", ["main.py"] + lArgs):
+            oArgs = main.parseArgs()
+        return main.runCheckstyle(oArgs)
 
     def test_runWithFile(self):
         lErrors = self.callRunCheckstyle(["-f", os.path.join(self.sGitFolder, "java", "Test.java")])
