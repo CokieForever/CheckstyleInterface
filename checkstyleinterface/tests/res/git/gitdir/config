@@ -4,3 +4,6 @@
 	filemode = false
 	ignorecase = true
 	logallrefupdates = true
+[user]
+	email = cokie.forever@gmail.com
+	name = Quoc-Nam Dessoulles

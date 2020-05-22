@@ -28,124 +28,63 @@ __email__ = "cokie.forever@gmail.com"
 __license__ = "MIT"
 
 import os
-import shutil
-import stat
 import subprocess
-import sys
-import time
-from unittest.mock import patch
 
-from checkstyleinterface import main
 import pytest
 
-
-def withRetry(xCallable):
-    try:
-        xCallable()
-    except OSError:
-        time.sleep(1)
-        xCallable()
+from checkstyleinterface import main
+from checkstyleinterface.tests.util import BaseTest, assertErrors
 
 
-def removeFolder(sFolderPath):
-    if os.path.isdir(sFolderPath):
-        def onRmError(sPath):
-            os.chmod(sPath, stat.S_IWRITE)
-            os.remove(sPath)
-
-        shutil.rmtree(sFolderPath, onerror=lambda *args: onRmError(args[1]))
-
-
-def assertErrors(lErrors, iErrorsCount, iWarningsCount, iInfoCount):
-    for oError in lErrors:
-        assert oError is not None
-        assert os.path.isfile(oError.sFile)
-        assert oError.iLine > 0
-        assert oError.iCol >= 0
-        assert oError.sSeverity.lower() in ["error", "warning", "info"]
-        assert oError.sMessage
-        assert not oError.bIgnored
-    assert len(lErrors) == iErrorsCount + iWarningsCount + iInfoCount
-    assert len([e for e in lErrors if e.sSeverity.lower() == "error"]) == iErrorsCount
-    assert len([e for e in lErrors if e.sSeverity.lower() == "warning"]) == iWarningsCount
-    assert len([e for e in lErrors if e.sSeverity.lower() == "info"]) == iInfoCount
-
-
-class TestRunCheckstyle:
-    sResFolder = os.path.abspath(os.path.join(os.path.dirname(__file__), "res"))
-    sCheckstyleJarFile = os.path.join(sResFolder, "checkstyle", "checkstyle-8.32-all.jar")
-    sPropFile = os.path.join(sResFolder, "checkstyle", "checkstyle.properties")
-    sConfigFile = os.path.join(sResFolder, "checkstyle", "checkstyle.xml")
-    sGitFolder = os.path.join(sResFolder, "git")
-
-    @classmethod
-    def setup_class(cls):
-        with open(cls.sPropFile, "w") as oFile:
-            oFile.write("config_loc=%s\n" % os.path.dirname(cls.sConfigFile).replace("\\", "/"))
-        sTmpFolder = os.path.join(cls.sResFolder, "tmp")
-        removeFolder(sTmpFolder)
-        withRetry(lambda: os.makedirs(sTmpFolder))
-        sNewGitFolder = os.path.join(sTmpFolder, "git")
-        shutil.copytree(cls.sGitFolder, sNewGitFolder)
-        withRetry(lambda: os.rename(os.path.join(sNewGitFolder, "gitdir"), os.path.join(sNewGitFolder, ".git")))
-        cls.sGitFolder = sNewGitFolder
-
-    @classmethod
-    def teardown_class(cls):
-        sTmpFolder = os.path.join(cls.sResFolder, "tmp")
-        removeFolder(sTmpFolder)
-
-    def callRunCheckstyle(self, lArgs, sJarFile=sCheckstyleJarFile, sConfigFile=sConfigFile):
-        lArgs += ["-c", sConfigFile, "-p", self.sPropFile]
-        if sJarFile:
-            lArgs += ["-j", sJarFile]
-        with patch.object(sys, "argv", ["main.py"] + lArgs):
-            oArgs = main.parseArgs()
-        return main.runCheckstyle(oArgs)
-
+class TestRunCheckstyle(BaseTest):
     def test_runWithFile(self):
-        lErrors = self.callRunCheckstyle(["-f", os.path.join(self.sGitFolder, "java", "Test.java")])
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-f", os.path.join(self.sGitFolder, "java", "Test.java")])
         assertErrors(lErrors, 1, 1, 1)
 
     def test_runWithMultipleFiles(self):
-        lErrors = self.callRunCheckstyle(["-f", os.path.join(self.sGitFolder, "java", "Test.java"),
-                                          os.path.join(self.sGitFolder, "java", "Foo.java")])
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-f", os.path.join(self.sGitFolder, "java", "Test.java"),
+                                                         os.path.join(self.sGitFolder, "java", "Foo.java")])
         assertErrors(lErrors, 2, 2, 1)
 
     def test_runWithFolder(self):
-        lErrors = self.callRunCheckstyle(["-d", os.path.join(self.sGitFolder, "java")])
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-d", os.path.join(self.sGitFolder, "java")])
         assertErrors(lErrors, 2, 2, 1)
 
     def test_runWithMultipleFolders(self):
-        lErrors = self.callRunCheckstyle(["-d", os.path.join(self.sGitFolder, "java"),
-                                          os.path.join(self.sGitFolder, "java", "com")])
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-d", os.path.join(self.sGitFolder, "java"),
+                                                         os.path.join(self.sGitFolder, "java", "com")])
         assertErrors(lErrors, 3, 3, 1)
 
     def test_runWithFolderAndFile(self):
-        lErrors = self.callRunCheckstyle(["-f", os.path.join(self.sGitFolder, "java", "Test.java"),
-                                          "-d", os.path.join(self.sGitFolder, "java", "com")])
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-f", os.path.join(self.sGitFolder, "java", "Test.java"),
+                                                         "-d", os.path.join(self.sGitFolder, "java", "com")])
         assertErrors(lErrors, 2, 2, 1)
 
     def test_runWithFolder_recursive(self):
-        lErrors = self.callRunCheckstyle(["-d", os.path.join(self.sGitFolder, "java"), "-r"])
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-d", os.path.join(self.sGitFolder, "java"), "-r"])
         assertErrors(lErrors, 3, 3, 1)
 
     def test_runWithGit_commitMode(self):
-        lErrors = self.callRunCheckstyle(["-g", self.sGitFolder, "-m", "commit"])
-        assertErrors(lErrors, 1, 1, 0)
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-g", self.sGitFolder, "-m", "commit"])
+        assertErrors(lErrors, 2, 2, 1)
 
     def test_runWithGit_pushMode(self):
-        lErrors = self.callRunCheckstyle(["-g", self.sGitFolder, "-m", "push"])
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-g", self.sGitFolder, "-m", "push"])
         assertErrors(lErrors, 1, 1, 1)
+
+    def test_runWithGit_linesOnly(self):
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-g", self.sGitFolder, "-m", "commit", "-l"])
+        assertErrors(lErrors, 2, 1, 0)
 
     def test_runWithEnvironmentVariable(self, monkeypatch):
         monkeypatch.setenv("CHECKSTYLE_JAR_LOC", self.sCheckstyleJarFile)
-        lErrors = self.callRunCheckstyle(["-f", os.path.join(self.sGitFolder, "java", "Test.java")], sJarFile="")
+        lErrors = self.callWithArgs(main.runCheckstyle, ["-f", os.path.join(self.sGitFolder, "java", "Test.java")],
+                                    sJarFile="")
         assertErrors(lErrors, 1, 1, 1)
 
     def test_runFailsWhenNoFileProvided(self):
         with pytest.raises(SystemExit) as oExc:
-            self.callRunCheckstyle([])
+            self.callWithArgs(main.runCheckstyle, [])
         assert oExc.value.code == 2
 
     def test_runFailsWhenInvalidConfig(self):
@@ -153,5 +92,5 @@ class TestRunCheckstyle:
         with open(sFakeConfigFile, "w") as oFile:
             oFile.write("foobar")
         with pytest.raises(subprocess.CalledProcessError):
-            self.callRunCheckstyle(["-f", os.path.join(self.sGitFolder, "java", "Test.java")],
-                                   sConfigFile=sFakeConfigFile)
+            self.callWithArgs(main.runCheckstyle, ["-f", os.path.join(self.sGitFolder, "java", "Test.java")],
+                              sConfigFile=sFakeConfigFile)

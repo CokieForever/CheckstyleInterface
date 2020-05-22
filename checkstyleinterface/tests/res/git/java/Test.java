@@ -1,4 +1,4 @@
-package com.test.checkstyle;
+package com.test;
 
 // This is a very long line which exceeds 140 chars and it's not a good practice to write such long lines because I cannot see a damn thing with my little screen.
 public class Test {

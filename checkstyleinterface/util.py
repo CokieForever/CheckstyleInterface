@@ -28,6 +28,7 @@ __email__ = "cokie.forever@gmail.com"
 __license__ = "MIT"
 
 import os
+import stat
 import subprocess
 import sys
 import tkinter as tk
@@ -221,3 +222,7 @@ def startFile(sFilePath):
         os.startfile(sFilePath)
     else:
         subprocess.Popen(['xdg-open', sFilePath])
+
+
+def makeExecutable(sFile):
+    os.chmod(sFile, (os.stat(sFile).st_mode & 0o777) | stat.S_IEXEC)

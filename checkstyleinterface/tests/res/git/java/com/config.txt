@@ -1,1 +1,9 @@
-This is a config file.
+; Main section
+[main]
+test = barfoo
+
+; Lang section
+; Optional
+[lang]
+hello = world
+bonjour = monde
